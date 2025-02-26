@@ -9,7 +9,7 @@ console.log("Server Start");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use("/", indexRouter);
+app.use("/api", indexRouter);
 
 app.use(errorHandler);
 

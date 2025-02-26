@@ -1,5 +1,7 @@
 const { body } = require("express-validator");
 const jwt = require("jsonwebtoken");
+const { CustomUnauthorizedError } = require("../errors/CustomErrors");
+require("dotenv").config();
 
 const registerValidation = [
   body("firstName")
@@ -53,4 +55,39 @@ const registerValidation = [
   }),
 ];
 
-module.exports = { registerValidation };
+const loginValidation = [
+  body("email")
+    .optional()
+    .isEmail()
+    .withMessage("Please provide a valid email address"),
+  body("username")
+    .optional()
+    .isString()
+    .withMessage("Please provide a valid username"),
+  body("password").notEmpty().withMessage("Password is required"),
+  body().custom((body) => {
+    if (!body.email && !body.username) {
+      throw new Error("Either email or username is required");
+    }
+    return true;
+  }),
+];
+
+const validateJWT = async (req, res, next) => {
+  const bearerHeader = req.headers["authorization"];
+  if (!bearerHeader) {
+    return next(new CustomUnauthorizedError());
+  } else {
+    const bearerToken = bearerHeader.split(" ")[1];
+    jwt.verify(bearerToken, process.env.JWT_SECRET, (err, authData) => {
+      if (err) {
+        return next(new CustomUnauthorizedError("Invalid or expired token"));
+      } else {
+        req.user = authData.userId;
+        next();
+      }
+    });
+  }
+};
+
+module.exports = { registerValidation, loginValidation, validateJWT };

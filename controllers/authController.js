@@ -1,10 +1,17 @@
 const asyncHandler = require("express-async-handler");
-const { registerValidation } = require("../middleware/validators");
+const {
+  registerValidation,
+  loginValidation,
+} = require("../middleware/validators");
 const { validationResult } = require("express-validator");
-const { CustomValidationError } = require("../errors/CustomErrors");
+const {
+  CustomValidationError,
+  CustomNotFoundError,
+} = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 exports.signup = [
   registerValidation,
@@ -68,6 +75,50 @@ exports.signup = [
       success: true,
       message: "User created successfully!",
       user: userWithoutPassword,
+    });
+  }),
+];
+
+exports.login = [
+  loginValidation,
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const validationErrors = errors.array();
+      const formData = req.body;
+      throw new CustomValidationError(
+        "Validation Failed",
+        validationErrors,
+        formData
+      );
+    }
+    const { email, username, password } = req.body;
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: email || "" }, { username: username || "" }],
+      },
+    });
+
+    if (!user) {
+      throw new CustomNotFoundError("Invalid credentials");
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      throw new CustomNotFoundError("Invalid credentials");
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "5h",
+    });
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      user: userWithoutPassword,
+      token,
     });
   }),
 ];
