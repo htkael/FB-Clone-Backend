@@ -72,6 +72,9 @@ exports.getPosts = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err; // Let the error handler deal with it
+    }
     throw new CustomServerError("Error retrieving posts");
   }
 });
@@ -150,6 +153,9 @@ exports.getSinglePost = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err; // Let the error handler deal with it
+    }
     throw new CustomServerError("Server error when retrieving post");
   }
 });
@@ -211,6 +217,12 @@ exports.updatePost = [
       });
     } catch (err) {
       console.error(err);
+      if (err instanceof CustomNotFoundError) {
+        throw err; // Let the error handler deal with it
+      }
+      if (err instanceof CustomUnauthorizedError) {
+        throw err; // Let the error handler deal with it
+      }
       throw new CustomServerError("Error when updating post");
     }
   }),
@@ -316,6 +328,12 @@ exports.postsFromUser = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err; // Let the error handler deal with it
+    }
+    if (err instanceof CustomUnauthorizedError) {
+      throw err; // Let the error handler deal with it
+    }
     throw new CustomServerError(
       "Server error when retrieving posts from user with id:",
       userId
@@ -490,6 +508,12 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err; // Let the error handler deal with it
+    }
+    if (err instanceof CustomUnauthorizedError) {
+      throw err; // Let the error handler deal with it
+    }
     throw new CustomServerError("Server error when retrieving user feed");
   }
 });

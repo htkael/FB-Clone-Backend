@@ -71,6 +71,13 @@ exports.getUserById = asyncHandler(async (req, res) => {
       user,
     });
   } catch (err) {
+    console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err; // Let the error handler deal with it
+    }
+    if (err instanceof CustomUnauthorizedError) {
+      throw err; // Let the error handler deal with it
+    }
     throw new CustomServerError(
       "Internal Server Error when finding single user."
     );
@@ -129,6 +136,13 @@ exports.updateUser = asyncHandler(async (req, res) => {
       user: updatedUser,
     });
   } catch (err) {
+    console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err; // Let the error handler deal with it
+    }
+    if (err instanceof CustomUnauthorizedError) {
+      throw err; // Let the error handler deal with it
+    }
     throw new CustomServerError("Server error while updating user");
   }
 });
@@ -152,6 +166,13 @@ exports.deleteUser = asyncHandler(async (req, res) => {
       message: "User deleted successfully",
     });
   } catch (err) {
+    console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err; // Let the error handler deal with it
+    }
+    if (err instanceof CustomUnauthorizedError) {
+      throw err; // Let the error handler deal with it
+    }
     throw new CustomServerError("Server error when attempting to delete user");
   }
 });
