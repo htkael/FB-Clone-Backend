@@ -65,6 +65,7 @@ const loginValidation = [
     .withMessage("Please provide a valid email address"),
   body("username")
     .optional()
+    .trim()
     .isString()
     .withMessage("Please provide a valid username"),
   body("password").notEmpty().withMessage("Password is required"),
@@ -77,7 +78,7 @@ const loginValidation = [
 ];
 
 const postValidation = [
-  body("content").exists().withMessage("Post content is required"),
+  body("content").trim().exists().withMessage("Post content is required"),
   body("imageUrl")
     .optional()
     .isURL({
@@ -107,6 +108,15 @@ const postValidation = [
     }),
 ];
 
+commentValidation = [
+  body("content")
+    .trim()
+    .exists()
+    .withMessage("Comment must have content to post")
+    .isLength({ min: 1, max: 300 })
+    .withMessage("Comment must be between 1 and 300 characters"),
+];
+
 const validateJWT = async (req, res, next) => {
   const bearerHeader = req.headers["authorization"];
   if (!bearerHeader) {
@@ -128,5 +138,6 @@ module.exports = {
   registerValidation,
   loginValidation,
   postValidation,
+  commentValidation,
   validateJWT,
 };

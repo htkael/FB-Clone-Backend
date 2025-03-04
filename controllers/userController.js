@@ -135,7 +135,8 @@ exports.updateUser = asyncHandler(async (req, res) => {
 
 exports.deleteUser = asyncHandler(async (req, res) => {
   const id = parseInt(req.params.userId);
-  if (req.user.id !== id) {
+  const userId = parseInt(req.user);
+  if (userId !== id) {
     throw new CustomUnauthorizedError("User not authorized to delete account");
   }
   const user = await prisma.user.findUnique({ where: { id: id } });
