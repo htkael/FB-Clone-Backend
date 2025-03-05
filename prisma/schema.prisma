@@ -24,6 +24,10 @@ model User {
   likes       Like[]
   sentFriends Friend[]    @relation("UserFriends")
   receivedFriends   Friend[]    @relation("FriendUser")
+
+  sentMessages    Message[]   @relation("MessageSender")
+  receivedMessages    Message[]   @relation("MessageReceiver")
+  participantInConversations    ConversationParticipant[]
 }
 
 model Post {
@@ -81,4 +85,47 @@ enum FriendStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+model Conversation {
+  id    Int   @id @default(autoincrement())
+  title String?
+  isGroup   Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  messages  Message[]
+  participants  ConversationParticipant[]
+}
+
+model ConversationParticipant {
+  id    Int   @id @default(autoincrement())
+  joinedAt   DateTime   @default(now())
+  lastReadAt  DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId  Int
+
+  @@unique([userId, conversationId])
+}
+
+model Message {
+  id    Int   @id @default(autoincrement())
+  content String
+  imageUrl  String?
+  isRead    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sender    User    @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId  Int
+
+  receiver  User?   @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId  Int?
+
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId  Int
 }
