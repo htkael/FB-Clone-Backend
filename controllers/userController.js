@@ -11,6 +11,8 @@ exports.getUsers = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
+  const currentUserId = parseInt(req.user);
+
   const users = await prisma.user.findMany({
     skip,
     take: limit,
@@ -24,8 +26,57 @@ exports.getUsers = asyncHandler(async (req, res) => {
       bio: true,
       createdAt: true,
       status: true,
+      _count: {
+        select: {
+          posts: true,
+          sentFriends: {
+            where: { status: "ACCEPTED" },
+          },
+          receivedFriends: {
+            where: { status: "ACCEPTED" },
+          },
+        },
+      },
     },
   });
+
+  if (currentUserId) {
+    const userIds = users.map((user) => user.id);
+
+    const friendships = await prisma.friend.findMany({
+      where: {
+        OR: [
+          { userId: currentUserId, friendId: { in: userIds } },
+          { userId: { in: userIds }, friendId: currentUserId },
+        ],
+      },
+      select: {
+        userId: true,
+        friendId: true,
+        status: true,
+      },
+    });
+
+    users.forEach((user) => {
+      const friendship = friendships.find((f) => {
+        return (
+          (f.userId === currentUserId && f.friendId === user.id) ||
+          (f.userId === user.id && f.friendId === currentUserId)
+        );
+      });
+
+      user.relationship = friendship
+        ? {
+            status: friendship.status,
+            isFriend: friendship.status === "ACCEPTED",
+          }
+        : { status: null, isFriend: false };
+
+      user.friendCount = user._count.sentFriends + user._count.receivedFriends;
+      user.postCount = user._count.posts;
+      delete user._count;
+    });
+  }
 
   const total = await prisma.user.count();
   const totalPages = Math.ceil(total / limit);
@@ -49,6 +100,7 @@ exports.getUsers = asyncHandler(async (req, res) => {
 
 exports.getUserById = asyncHandler(async (req, res) => {
   const id = parseInt(req.params.userId);
+  const currentUserId = parseInt(req.user);
   console.log("ID:", id);
   try {
     const user = await prisma.user.findUnique({
@@ -65,10 +117,57 @@ exports.getUserById = asyncHandler(async (req, res) => {
         status: true,
       },
     });
+    if (!user) {
+      throw new CustomNotFoundError(`User with id (${id}) not found`);
+    }
+
+    const postCount = await prisma.post.count({
+      where: {
+        authorId: id,
+      },
+    });
+
+    const friendCount = await prisma.friend.count({
+      where: {
+        OR: [
+          { userId: id, status: "ACCEPTED" },
+          { friendId: id, status: "ACCEPTED" },
+        ],
+      },
+    });
+
+    let isFriend = false;
+    let friendshipStatus = null;
+
+    if (currentUserId) {
+      const friendship = await prisma.friend.findFirst({
+        where: {
+          OR: [
+            { userId: currentUserId, friendId: id },
+            { userId: id, friendId: currentUserId },
+          ],
+        },
+      });
+      if (friendship) {
+        friendshipStatus = friendship.status;
+        isFriend = friendship.status === "ACCEPTED";
+      }
+    }
+
     res.json({
       success: true,
       message: "User Found!",
-      user,
+      data: {
+        ...user,
+        stats: {
+          postCount,
+          friendCount,
+        },
+        relationship: {
+          isFriend,
+          friendshipStatus,
+        },
+      },
     });
   } catch (err) {
     console.error(err);
