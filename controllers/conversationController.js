@@ -16,8 +16,10 @@ exports.getConversations = asyncHandler(async (req, res) => {
     const conversations = await prisma.conversation.findMany({
       where: {
         participants: {
-          some: { userId: userId },
-          isHidden: false,
+          some: {
+            userId: userId,
+            isHidden: false,
+          },
         },
       },
       skip,
