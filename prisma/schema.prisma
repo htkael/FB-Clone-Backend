@@ -153,6 +153,6 @@ model Notification {
   postId          Int?
   commentId       Int?
   messageId       Int?
-  conversationid  Int?
+  conversationId  Int?
   friendRequestId Int?
 }
