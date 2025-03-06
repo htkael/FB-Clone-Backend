@@ -4,31 +4,6 @@ class SocketService {
     this.activeUsers = activeUsers;
   }
 
-  notifyNewMessage(message, conversation) {
-    this.io.to(`conversation:${message.conversationId}`).emit("message:new", {
-      message,
-      conversation,
-    });
-
-    conversation.participants.forEach((participant) => {
-      if (
-        participant.userId !== message.senderId &&
-        this.isUserActive(participant.userId)
-      ) {
-        this.io.to(`user:${participant.userId}`).emit("notification:message", {
-          type: "new_message",
-          conversationId: message.conversationId,
-          senderId: message.senderId,
-          senderName: message.sender.username,
-          content:
-            message.content.substring(0, 50) +
-            (message.content.length > 50 ? "..." : ""),
-          timestamp: new Date(),
-        });
-      }
-    });
-  }
-
   notifyMessageEdited(message) {
     this.io
       .to(`conversation:${message.conversationId}`)
@@ -43,43 +18,6 @@ class SocketService {
       .emit("message:deleted", {
         messageId: message.id,
         conversationId: message.conversationId,
-      });
-  }
-
-  notifyNewConversation(conversation, creatorId) {
-    conversation.participants.forEach((participant) => {
-      if (participant.userId !== creatorId) {
-        this.io
-          .to(`user:${participant.userId}`)
-          .emit("notification:conversation", {
-            type: "new_conversation",
-            conversationId: conversation.id,
-            title: conversation.title || "New Direct Message",
-            isGroup: conversation.isGroup,
-            creatorId,
-            timestamp: new Date(),
-          });
-      }
-    });
-  }
-
-  notifyUserAddedToConversation(conversation, userId, addedById) {
-    this.io.to(`user:${userId}`).emit("notification:conversation", {
-      type: "added_to_conversation",
-      conversationId: conversation.id,
-      title: conversation.title || "New Conversation",
-      isGroup: conversation.isGroup,
-      addedById,
-      timestamp: new Date(),
-    });
-
-    this.io
-      .to(`conversation:${conversation.id}`)
-      .emit("conversation:user_added", {
-        conversationId: conversation.id,
-        userId,
-        addedById,
-        timestamp: new Date(),
       });
   }
 
@@ -120,23 +58,6 @@ class SocketService {
     });
   }
 
-  notifyFriendRequest(fromUserId, toUserId, requestId) {
-    this.io.to(`user:${toUserId}`).emit("notification:friend_requested", {
-      type: "friend_request",
-      fromUserId,
-      toUserId,
-      timestamp: new Date(),
-    });
-  }
-
-  notifyFriendRequestAccepted(fromUserId, toUserId) {
-    this.io.to(`user:${toUserId}`).emit("notification:friend_accepted", {
-      type: "friend_accepted",
-      fromUserId,
-      timestamp: new Date(),
-    });
-  }
-
   isUserActive(userId) {
     return this.activeUsers.has(userId.toString());
   }
@@ -151,6 +72,14 @@ class SocketService {
       userId,
       timestamp: new Date(),
     });
+  }
+
+  emitToUser(userId, event, data) {
+    this.io.to(`user:${userId}`).emit(event, data);
+  }
+
+  emitToConversation(conversationId, event, data) {
+    this.io.to(`conversation:${conversationId}`).emit(event, data);
   }
 }
 

@@ -28,6 +28,10 @@ model User {
   sentMessages               Message[]                 @relation("MessageSender")
   receivedMessages           Message[]                 @relation("MessageReceiver")
   participantInConversations ConversationParticipant[]
+
+  notifcations Notification[]
+
+  sentNotifications Notification[] @relation("NotificationSender")
 }
 
 model Post {
@@ -129,4 +133,24 @@ model Message {
 
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId Int
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  fromUser   User? @relation("NotificationSender", fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromUserId Int?
+
+  postId          Int?
+  commentId       Int?
+  messageId       Int?
+  conversationid  Int?
+  friendRequestId Int?
 }
