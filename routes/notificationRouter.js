@@ -13,3 +13,5 @@ notificationRouter.delete(
   "/:notificationId",
   notificationController.deleteNotification
 );
+
+module.exports = notificationRouter;
