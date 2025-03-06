@@ -19,6 +19,6 @@ indexRouter.use("/comments", validateJWT, commentRouter);
 indexRouter.get("/feed", validateJWT, postController.getUserFeed);
 indexRouter.use("/friends", validateJWT, friendRouter);
 indexRouter.use("/conversations", validateJWT, conversationRouter);
-indexRouter.use("/notifications", notificationRouter);
+indexRouter.use("/notifications", validateJWT, notificationRouter);
 
 module.exports = indexRouter;

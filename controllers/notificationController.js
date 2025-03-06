@@ -15,7 +15,7 @@ exports.getNotifications = asyncHandler(async (req, res) => {
   try {
     const total = await prisma.notification.count({
       where: {
-        user,
+        userId: userId,
       },
     });
 
@@ -61,7 +61,7 @@ exports.getNotifications = asyncHandler(async (req, res) => {
 
 exports.markAsRead = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
-  const notificationId = parseInt(req.params.notificationid);
+  const notificationId = parseInt(req.params.notificationId);
 
   try {
     const notification = await prisma.notification.findUnique({
@@ -107,68 +107,30 @@ exports.markAllAsRead = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
 
   try {
-    const participant = await prisma.conversationParticipant.findUnique({
+    // Update all unread notifications for this user
+    await prisma.notification.updateMany({
       where: {
-        userId_conversationId: {
-          userId,
-          conversationId,
-        },
+        userId,
+        isRead: false,
       },
+      data: { isRead: true },
     });
-
-    if (!participant) {
-      throw new CustomNotFoundError(
-        "You are not a participant in this conversation"
-      );
-    }
-
-    const latestMessage = await prisma.message.findFirst({
-      where: {
-        conversationId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    await prisma.conversationParticipant.update({
-      where: {
-        userId_conversationId: {
-          userId,
-          conversationId,
-        },
-      },
-      data: {
-        lastReadAt: new Date(),
-      },
-    });
-
-    if (latestMessage) {
-      const socketService = new SocketService(req.io, req.activeUsers);
-      socketService.notifyMessageRead(conversationId, userId, latestMessage.id);
-    }
 
     res.json({
       success: true,
-      message: "Conversation marked as read",
+      message: "All notifications marked as read",
     });
   } catch (err) {
     console.error(err);
-    if (err instanceof CustomNotFoundError) {
-      throw err;
-    }
     throw new CustomServerError(
-      "Server error when marking conversation as read"
+      "Server error when marking all notifications as read"
     );
   }
 });
 
 exports.deleteNotification = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
-  const notificationId = parseint(req.params.notificationId);
+  const notificationId = parseInt(req.params.notificationId);
 
   try {
     const notification = await prisma.notification.findUnique({

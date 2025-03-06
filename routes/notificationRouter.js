@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const notificationRouter = Router();
-const notificationController = require("../controllers/notifcationController");
+const notificationController = require("../controllers/notificationController");
 
 notificationRouter.get("/", notificationController.getNotifications);
 notificationRouter.get("/unread", notificationController.getUnreadCount);

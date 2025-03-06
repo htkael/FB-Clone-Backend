@@ -7,6 +7,6 @@ friendRouter.delete("/request/:userId", friendController.deleteRequest);
 friendRouter.get("/requests/pending", friendController.getPending);
 friendRouter.put("/request/:requestId/accept", friendController.acceptRequest);
 friendRouter.put("/request/:requestId/reject", friendController.rejectRequest);
-friendRouter.delete("/friends/:friendId", friendController.removeFriend);
+friendRouter.delete("/:friendId", friendController.removeFriend);
 
 module.exports = friendRouter;
