@@ -125,7 +125,7 @@ exports.login = [
 
     if (req.io) {
       const socketService = new SocketService(req.io, req.activeUsers);
-      socketService.emitToAll("user:status", {
+      socketService.broadcastToAll("user:status", {
         userId: user.id,
         status: "online",
       });
