@@ -2,7 +2,7 @@ const { Server } = require("socket.io");
 const { CustomUnauthorizedError } = require("../errors/CustomErrors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { user } = require("../prisma/client");
+const socketController = require("../controllers/socketController");
 
 function setupSocketIO(server) {
   const io = new Server(server, {
@@ -35,6 +35,7 @@ function setupSocketIO(server) {
 
   io.on("connection", (socket) => {
     const userId = socket.userId;
+    socket.activeUsers = activeUsers;
     console.log(`User connected ${userId}`);
 
     if (!activeUsers.has(userId)) {
@@ -64,6 +65,8 @@ function setupSocketIO(server) {
       }
     });
   });
+
+  socketController.setupSocketEvents(io);
 
   const socketMiddleware = (req, res, next) => {
     req.io = io;

@@ -9,6 +9,7 @@ const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
 const { postValidation } = require("../middleware/validators");
 const { validationResult } = require("express-validator");
+const SocketService = require("../services/socketService");
 
 exports.sendMessage = [
   postValidation,
@@ -24,12 +25,6 @@ exports.sendMessage = [
       );
     }
     const conversationId = parseInt(req.params.conversationId);
-    console.log(
-      "Conversation ID:",
-      conversationId,
-      "Type:",
-      typeof req.params.conversationId
-    );
     const senderId = parseInt(req.user);
     const { content, imageUrl } = req.body;
     try {
@@ -88,7 +83,27 @@ exports.sendMessage = [
           receiverId,
           conversationId,
         },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              username: true,
+              profilePicUrl: true,
+            },
+          },
+        },
       });
+
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          updatedAt: new Date(),
+        },
+      });
+
+      const socketService = new SocketService(req.io, req.activeUsers);
+      socketService.notifyNewMessage(message, conversation);
+
       res.json({
         success: true,
         message: "Message sent successfully",
@@ -192,6 +207,9 @@ exports.editMessage = [
         },
       });
 
+      const socketService = new SocketService(req.io, req.activeUsers);
+      socketService.notifyMessageEdited(updatedMessage);
+
       res.json({
         success: true,
         message: "Message edited successfully",
@@ -274,6 +292,9 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
         id: messageId,
       },
     });
+
+    const socketService = new SocketService(req.io, req.activeUsers);
+    socketService.notifyMessageDeleted(deletedMessage);
 
     res.json({
       success: true,

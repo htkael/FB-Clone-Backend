@@ -144,6 +144,14 @@ class SocketService {
   getActiveUsersCount() {
     return this.activeUsers.size;
   }
+
+  notifyUserStoppedTyping(conversationId, userId) {
+    this.io.to(`conversation:${conversationId}`).emit("user:typing:stop", {
+      conversationId,
+      userId,
+      timestamp: new Date(),
+    });
+  }
 }
 
 module.exports = SocketService;

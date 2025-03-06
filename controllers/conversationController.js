@@ -6,6 +6,7 @@ const {
 } = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
+const SocketService = require("../services/socketService");
 
 exports.getConversations = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
@@ -275,6 +276,9 @@ exports.createConversation = asyncHandler(async (req, res) => {
       },
     });
 
+    const socketService = new SocketService(req.io, req.activeUsers);
+    socketService.notifyNewConversation(conversation, userId);
+
     res.json({
       success: true,
       message: "Conversation created successfully",
@@ -444,6 +448,10 @@ exports.updateTitle = asyncHandler(async (req, res) => {
         title,
       },
     });
+
+    const socketService = new SocketService(req.io, req.activeUsers);
+    socketService.notifyConversationRenamed(conversationId, title, userId);
+
     res.json({
       success: true,
       message: "Conversation title changed successfully",

@@ -6,6 +6,7 @@ const {
 } = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
+const SocketService = require("../services/socketService");
 
 exports.addParticipant = asyncHandler(async (req, res) => {
   const conversationId = parseInt(req.params.conversationId);
@@ -75,6 +76,14 @@ exports.addParticipant = asyncHandler(async (req, res) => {
         conversationId,
       },
     });
+
+    const socketService = new SocketService(req.io, req.activeUsers);
+    socketService.notifyUserAddedToConversation(
+      conversation,
+      userToAddId,
+      userId
+    );
+
     res.json({
       success: true,
       message: "User successfully added to group",
@@ -145,6 +154,9 @@ exports.removeSelf = asyncHandler(async (req, res) => {
         },
       },
     });
+
+    const socketService = new SocketService(req.io, req.activeUsers);
+    socketService.notifyUserLeftConversation(conversationId, userId);
 
     res.json({
       success: true,
