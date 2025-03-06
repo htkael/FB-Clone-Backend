@@ -156,7 +156,7 @@ exports.logout = asyncHandler(async (req, res) => {
     // Broadcast user offline status
     if (req.io) {
       const socketService = new SocketService(req.io, req.activeUsers);
-      socketService.emitToAll("user:status", {
+      socketService.broadcastToAll("user:status", {
         userId,
         status: "offline",
         lastSeen: new Date(),
