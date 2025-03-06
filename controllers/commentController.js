@@ -5,11 +5,23 @@ const {
   CustomServerError,
   CustomNotFoundError,
   CustomUnauthorizedError,
+  CustomValidationError,
 } = require("../errors/CustomErrors");
+const { validationResult } = require("express-validator");
 
 exports.postComment = [
   commentValidation,
   asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const validationErrors = errors.array();
+      const formData = req.body;
+      throw new CustomValidationError(
+        "Validation Failed",
+        validationErrors,
+        formData
+      );
+    }
     const authorId = parseInt(req.user);
     const postId = parseInt(req.params.postId);
     const content = req.body.content;
@@ -47,6 +59,9 @@ exports.postComment = [
         throw err; // Let the error handler deal with it
       }
       if (err instanceof CustomUnauthorizedError) {
+        throw err; // Let the error handler deal with it
+      }
+      if (err instanceof CustomValidationError) {
         throw err; // Let the error handler deal with it
       }
       throw new CustomServerError("Server error when creating comment");
@@ -119,6 +134,16 @@ exports.getCommentsFromPost = asyncHandler(async (req, res) => {
 exports.updateComment = [
   commentValidation,
   asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const validationErrors = errors.array();
+      const formData = req.body;
+      throw new CustomValidationError(
+        "Validation Failed",
+        validationErrors,
+        formData
+      );
+    }
     const commentId = parseInt(req.params.commentId);
     const userId = parseInt(req.user);
     const content = req.body.content;
@@ -167,6 +192,9 @@ exports.updateComment = [
         throw err; // Let the error handler deal with it
       }
       if (err instanceof CustomUnauthorizedError) {
+        throw err; // Let the error handler deal with it
+      }
+      if (err instanceof CustomValidationError) {
         throw err; // Let the error handler deal with it
       }
       throw new CustomServerError(

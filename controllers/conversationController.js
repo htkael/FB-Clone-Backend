@@ -529,3 +529,43 @@ exports.hideConversation = asyncHandler(async (req, res) => {
     );
   }
 });
+
+exports.markConversationAsRead = asyncHandler(async (req, res) => {
+  const userId = parseInt(req.user);
+  const conversationId = parseInt(req.params.conversationId);
+
+  try {
+    // Update the lastReadAt timestamp
+    await prisma.conversationParticipant.update({
+      where: {
+        userId_conversationId: {
+          userId,
+          conversationId,
+        },
+      },
+      data: {
+        lastReadAt: new Date(),
+      },
+    });
+
+    // If you have socket.io integration, emit the read event
+    // const io = req.app.get('io');
+    // if (io) {
+    //   io.to(`conversation:${conversationId}`).emit('message-read', {
+    //     userId,
+    //     conversationId,
+    //     timestamp: new Date()
+    //   });
+    // }
+
+    res.json({
+      success: true,
+      message: "Conversation marked as read",
+    });
+  } catch (err) {
+    console.error(err);
+    throw new CustomServerError(
+      "Server error when marking conversation as read"
+    );
+  }
+});

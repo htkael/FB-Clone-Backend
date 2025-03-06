@@ -3,10 +3,11 @@ const {
   CustomServerError,
   CustomNotFoundError,
   CustomUnauthorizedError,
+  CustomValidationError,
 } = require("../errors/CustomErrors");
 const { postValidation } = require("../middleware/validators");
 const asyncHandler = require("express-async-handler");
-const authRouter = require("../routes/authRouter");
+const { validationResult } = require("express-validator");
 
 exports.getPosts = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -82,6 +83,16 @@ exports.getPosts = asyncHandler(async (req, res) => {
 exports.createPost = [
   postValidation,
   asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const validationErrors = errors.array();
+      const formData = req.body;
+      throw new CustomValidationError(
+        "Validation Failed",
+        validationErrors,
+        formData
+      );
+    }
     const { content, imageUrl } = req.body;
     const id = parseInt(req.user);
     const post = await prisma.post.create({
@@ -163,6 +174,16 @@ exports.getSinglePost = asyncHandler(async (req, res) => {
 exports.updatePost = [
   postValidation,
   asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const validationErrors = errors.array();
+      const formData = req.body;
+      throw new CustomValidationError(
+        "Validation Failed",
+        validationErrors,
+        formData
+      );
+    }
     const id = parseInt(req.params.postId);
     const userId = parseInt(req.user);
     const post = await prisma.post.findUnique({
@@ -221,6 +242,9 @@ exports.updatePost = [
         throw err; // Let the error handler deal with it
       }
       if (err instanceof CustomUnauthorizedError) {
+        throw err; // Let the error handler deal with it
+      }
+      if (err instanceof CustomValidationError) {
         throw err; // Let the error handler deal with it
       }
       throw new CustomServerError("Error when updating post");

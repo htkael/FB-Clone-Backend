@@ -52,7 +52,7 @@ const registerValidation = [
     .withMessage("Password must contain at least one special character"),
   body("password_conf").custom((value, { req }) => {
     if (value !== req.body.password) {
-      throw new Error("Passwords do not match");
+      throw new CustomValidationError("Passwords do not match");
     }
     return true;
   }),
@@ -71,7 +71,7 @@ const loginValidation = [
   body("password").notEmpty().withMessage("Password is required"),
   body().custom((body) => {
     if (!body.email && !body.username) {
-      throw new Error("Either email or username is required");
+      throw new CustomValidationError("Either email or username is required");
     }
     return true;
   }),
