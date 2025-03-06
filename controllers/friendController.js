@@ -5,7 +5,7 @@ const {
 } = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
-const SocketService = require("../services/socketService");
+const NotificationService = require("../services/notificationService");
 
 exports.sendRequest = asyncHandler(async (req, res) => {
   const friendId = parseInt(req.params.userId);
@@ -54,8 +54,11 @@ exports.sendRequest = asyncHandler(async (req, res) => {
       },
     });
 
-    const socketService = new SocketService(req.io, req.activeUsers);
-    socketService.notifyFriendRequest(userId, friendId, request.id);
+    const notificationService = new NotificationService(
+      req.io,
+      req.activeUsers
+    );
+    notificationService.notifyFriendRequest(userId, friendId, request.id);
 
     res.json({
       success: true,
@@ -222,8 +225,14 @@ exports.acceptRequest = asyncHandler(async (req, res) => {
       },
     });
 
-    const socketService = new SocketService(req.io, req.activeUsers);
-    socketService.notifyFriendRequestAccepted(request.userId, userId);
+    const notificationService = new NotificationService(
+      req.io,
+      req.activeUsers
+    );
+    notificationService.notifyFriendRequestAccepted(
+      userId,
+      acceptedRequest.userId
+    );
 
     res.json({
       success: true,

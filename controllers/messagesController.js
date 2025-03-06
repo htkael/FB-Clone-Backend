@@ -9,6 +9,7 @@ const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
 const { postValidation } = require("../middleware/validators");
 const { validationResult } = require("express-validator");
+const NotificationService = require("../services/notificationService");
 const SocketService = require("../services/socketService");
 
 exports.sendMessage = [
@@ -101,8 +102,11 @@ exports.sendMessage = [
         },
       });
 
-      const socketService = new SocketService(req.io, req.activeUsers);
-      socketService.notifyNewMessage(message, conversation);
+      const notificationService = new NotificationService(
+        req.io,
+        req.activeUsers
+      );
+      notificationService.notifyNewMessage(message, conversation);
 
       res.json({
         success: true,
@@ -287,14 +291,14 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
       );
     }
 
-    const deletedMessage = await prisma.message.delete({
+    await prisma.message.delete({
       where: {
         id: messageId,
       },
     });
 
     const socketService = new SocketService(req.io, req.activeUsers);
-    socketService.notifyMessageDeleted(deletedMessage);
+    socketService.notifyMessageDeleted(message);
 
     res.json({
       success: true,

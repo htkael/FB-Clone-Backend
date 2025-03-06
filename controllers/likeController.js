@@ -4,6 +4,7 @@ const {
 } = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
+const NotificationService = require("../services/notificationService");
 
 exports.likePost = asyncHandler(async (req, res) => {
   const postId = parseInt(req.params.postId);
@@ -49,6 +50,12 @@ exports.likePost = asyncHandler(async (req, res) => {
         postId: postId,
       },
     });
+
+    const notificationService = new NotificationService(
+      req.io,
+      req.activeUsers
+    );
+    notificationService.notifyPostLike(postId, userId, post.authorId);
 
     res.json({
       success: true,

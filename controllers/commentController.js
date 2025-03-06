@@ -8,6 +8,7 @@ const {
   CustomValidationError,
 } = require("../errors/CustomErrors");
 const { validationResult } = require("express-validator");
+const NotificationService = require("../services/notificationService");
 
 exports.postComment = [
   commentValidation,
@@ -48,6 +49,17 @@ exports.postComment = [
           },
         },
       });
+
+      const notificationService = new NotificationService(
+        req.io,
+        req.activeUsers
+      );
+      notificationService.notifyPostComment(
+        comment.id,
+        postId,
+        authorId,
+        post.authorId
+      );
       res.json({
         success: true,
         message: "Comment created successfully",

@@ -6,6 +6,7 @@ const {
 } = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
+const NotificationService = require("../services/notificationService");
 const SocketService = require("../services/socketService");
 
 exports.addParticipant = asyncHandler(async (req, res) => {
@@ -77,10 +78,13 @@ exports.addParticipant = asyncHandler(async (req, res) => {
       },
     });
 
-    const socketService = new SocketService(req.io, req.activeUsers);
-    socketService.notifyUserAddedToConversation(
+    const notificationService = new NotificationService(
+      req.io,
+      req.activeUsers
+    );
+    notificationService.notifyUserAddedToConversation(
       conversation,
-      userToAddId,
+      userToAdd,
       userId
     );
 

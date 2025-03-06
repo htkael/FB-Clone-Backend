@@ -3,6 +3,7 @@ const { CustomUnauthorizedError } = require("../errors/CustomErrors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const socketController = require("../controllers/socketController");
+const prisma = require("../prisma/client");
 
 function setupSocketIO(server) {
   const io = new Server(server, {
@@ -38,6 +39,16 @@ function setupSocketIO(server) {
     socket.activeUsers = activeUsers;
     console.log(`User connected ${userId}`);
 
+    prisma.user
+      .update({
+        where: { id: parseInt(userId) },
+        data: {
+          isOnline: true,
+          lastSeen: null,
+        },
+      })
+      .catch((err) => console.error("Error updating user online status:", err));
+
     if (!activeUsers.has(userId)) {
       activeUsers.set(userId, new Set());
     }
@@ -53,14 +64,28 @@ function setupSocketIO(server) {
       console.log(`User ${userId} joined conversation ${conversationId}`);
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log(`User disconnected: ${userId}`);
 
       if (activeUsers.has(userId)) {
         activeUsers.get(userId).delete(socket.id);
         if (activeUsers.get(userId).size === 0) {
           activeUsers.delete(userId);
-          socket.broadcast.emit("user:offline", { userId });
+          try {
+            await prisma.user.update({
+              where: { id: parseInt(userId) },
+              data: {
+                isOnline: false,
+                lastSeen: new Date(),
+              },
+            });
+          } catch (err) {
+            console.error("Error updating user offline status:", err);
+          }
+          socket.broadcast.emit("user:offline", {
+            userId,
+            lastSeen: new Date(),
+          });
         }
       }
     });

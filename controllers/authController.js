@@ -12,6 +12,7 @@ const prisma = require("../prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const SocketService = require("../services/socketService");
 
 exports.signup = [
   registerValidation,
@@ -114,6 +115,22 @@ exports.login = [
 
     const { password: _, ...userWithoutPassword } = user;
 
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isOnline: true,
+        lastSeen: null,
+      },
+    });
+
+    if (req.io) {
+      const socketService = new SocketService(req.io, req.activeUsers);
+      socketService.emitToAll("user:status", {
+        userId: user.id,
+        status: "online",
+      });
+    }
+
     res.json({
       success: true,
       message: "Login successful",
@@ -122,3 +139,36 @@ exports.login = [
     });
   }),
 ];
+
+exports.logout = asyncHandler(async (req, res) => {
+  const userId = parseInt(req.user);
+
+  try {
+    // Update user's online status
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isOnline: false,
+        lastSeen: new Date(),
+      },
+    });
+
+    // Broadcast user offline status
+    if (req.io) {
+      const socketService = new SocketService(req.io, req.activeUsers);
+      socketService.emitToAll("user:status", {
+        userId,
+        status: "offline",
+        lastSeen: new Date(),
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    throw new CustomServerError("Server error during logout");
+  }
+});

@@ -6,6 +6,7 @@ const {
 } = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const asyncHandler = require("express-async-handler");
+const NotificationService = require("../services/notificationService");
 const SocketService = require("../services/socketService");
 
 exports.getConversations = asyncHandler(async (req, res) => {
@@ -276,8 +277,11 @@ exports.createConversation = asyncHandler(async (req, res) => {
       },
     });
 
-    const socketService = new SocketService(req.io, req.activeUsers);
-    socketService.notifyNewConversation(conversation, userId);
+    const notificationService = new NotificationService(
+      req.io,
+      req.activeUsers
+    );
+    notificationService.notifyNewConversation(conversation, userId);
 
     res.json({
       success: true,
@@ -365,7 +369,7 @@ exports.getSpecificConversation = asyncHandler(async (req, res) => {
     const total = conversation._count.messages;
     const totalPages = Math.ceil(total / limit);
 
-    await prisma.conversationParticipant.update({
+    const participant = await prisma.conversationParticipant.update({
       where: {
         userId_conversationId: {
           userId,
@@ -376,6 +380,13 @@ exports.getSpecificConversation = asyncHandler(async (req, res) => {
         lastReadAt: new Date(),
       },
     });
+
+    const latestMessage = conversation.messages[0];
+    if (latestMessage) {
+      // Emit socket event for read receipt
+      const socketService = new SocketService(req.io, req.activeUsers);
+      socketService.notifyMessageRead(conversationId, userId, latestMessage.id);
+    }
 
     res.json({
       success: true,
@@ -555,16 +566,6 @@ exports.markConversationAsRead = asyncHandler(async (req, res) => {
         lastReadAt: new Date(),
       },
     });
-
-    // If you have socket.io integration, emit the read event
-    // const io = req.app.get('io');
-    // if (io) {
-    //   io.to(`conversation:${conversationId}`).emit('message-read', {
-    //     userId,
-    //     conversationId,
-    //     timestamp: new Date()
-    //   });
-    // }
 
     res.json({
       success: true,

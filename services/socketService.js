@@ -81,6 +81,11 @@ class SocketService {
   emitToConversation(conversationId, event, data) {
     this.io.to(`conversation:${conversationId}`).emit(event, data);
   }
+
+  // Broadcast to everyone except sender
+  broadcastToAll(event, data) {
+    this.io.emit(event, data);
+  }
 }
 
 module.exports = SocketService;

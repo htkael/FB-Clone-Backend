@@ -107,19 +107,61 @@ exports.markAllAsRead = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
 
   try {
-    await prisma.notification.updateMany({
-      where: { userId, isRead: false },
-      data: { isRead: true },
+    const participant = await prisma.conversationParticipant.findUnique({
+      where: {
+        userId_conversationId: {
+          userId,
+          conversationId,
+        },
+      },
     });
+
+    if (!participant) {
+      throw new CustomNotFoundError(
+        "You are not a participant in this conversation"
+      );
+    }
+
+    const latestMessage = await prisma.message.findFirst({
+      where: {
+        conversationId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    await prisma.conversationParticipant.update({
+      where: {
+        userId_conversationId: {
+          userId,
+          conversationId,
+        },
+      },
+      data: {
+        lastReadAt: new Date(),
+      },
+    });
+
+    if (latestMessage) {
+      const socketService = new SocketService(req.io, req.activeUsers);
+      socketService.notifyMessageRead(conversationId, userId, latestMessage.id);
+    }
 
     res.json({
       success: true,
-      message: "All notifications marked as read",
+      message: "Conversation marked as read",
     });
   } catch (err) {
     console.error(err);
+    if (err instanceof CustomNotFoundError) {
+      throw err;
+    }
     throw new CustomServerError(
-      "Server error when marking all notifications as read"
+      "Server error when marking conversation as read"
     );
   }
 });
