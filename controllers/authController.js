@@ -13,6 +13,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const SocketService = require("../services/socketService");
+const { generateGravatarUrl } = require("../utils/gravatar");
 
 exports.signup = [
   registerValidation,
@@ -32,6 +33,7 @@ exports.signup = [
     const email = req.body.email;
     const username = req.body.username;
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const profilePicUrl = generateGravatarUrl(email);
 
     const existingEmail = await prisma.user.findUnique({
       where: {
@@ -67,6 +69,7 @@ exports.signup = [
         email,
         username,
         password: hashedPassword,
+        profilePicUrl,
       },
     });
 
