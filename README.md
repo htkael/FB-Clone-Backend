@@ -1,60 +1,44 @@
-# FB-Clone-Backend
+# Facebook Clone API
 
-Roadmap:
-User Profile Management
+A full-featured social media platform backend with real-time capabilities, including authentication, social features, messaging, and notifications.
 
-Update user profile information
-Change password
-Upload/update profile picture
-Delete account
+## Features
 
-Posts Functionality
+### Authentication System
 
-Create posts
-Read/fetch posts (with pagination)
-Update posts
-Delete posts
-Like/unlike posts
+- User registration and login with JWT
+- Guest user access
+- Online status tracking
+- Gravatar integration for profile pictures
 
-Comments System
+### Social Features
 
-Add comments to posts
-Fetch comments for a post
-Edit comments
-Delete comments
+- Posts, comments, and likes
+- Friend requests and connections
+- User profiles with customizable details
 
-Friend System
+### Messaging System
 
-Send friend requests
-Accept/reject friend requests
-Remove friends
-Fetch friend list
+- Real-time conversations (group and direct)
+- Read receipts
+- Message editing and deletion
 
-Feed Generation
+### Notification System
 
-Create algorithm to show relevant posts in user's feed
-Pagination for feed
+- Database-persisted notifications
+- Real-time delivery via Socket.IO
+- Notifications for all social interactions
 
-Notifications
+### Real-time Communication
 
-Notify on friend requests, likes, comments
-Mark notifications as read
+- Socket.IO integration
+- User presence tracking
+- Event broadcasting
 
-Search Functionality
+## Technologies Used
 
-Search for users
-Search for posts by content
-
-Middleware and Security
-
-Implement rate limiting
-Add request validation for all endpoints
-Implement proper authorization checks
-
-For each feature, you'll typically:
-
-Create controller functions
-Define routes
-Add validation logic
-Implement error handling
-Write tests
+- **Backend**: Node.js, Express.js
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: JWT (JSON Web Tokens)
+- **Real-time Communication**: Socket.IO
+- **Others**: bcrypt for password hashing, Gravatar for avatars
