@@ -140,7 +140,7 @@ const guestValidator = async (req, res, next) => {
   try {
     if (req.user && req.isGuest) {
       const guestUser = await prisma.user.findUnique({
-        where: { id: parseInt(req.user) },
+        where: { id: req.user },
       });
 
       if (!guestUser) {
