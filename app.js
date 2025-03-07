@@ -8,6 +8,7 @@ const http = require("http");
 const setupSocketIO = require("./middleware/socketSetup");
 const server = http.createServer(app);
 const { io, socketMiddleware } = setupSocketIO(server);
+const { scheduleGuestCleanup } = require("./utils/scheduledTasks");
 
 console.log("Server Start");
 
@@ -22,6 +23,8 @@ app.use(
   })
 );
 app.use(socketMiddleware);
+
+scheduleGuestCleanup();
 
 app.use("/api", indexRouter);
 

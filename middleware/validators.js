@@ -4,6 +4,7 @@ const {
   CustomUnauthorizedError,
   CustomValidationError,
 } = require("../errors/CustomErrors");
+const prisma = require("../prisma/client");
 require("dotenv").config();
 
 const registerValidation = [
@@ -128,9 +129,38 @@ const validateJWT = async (req, res, next) => {
         return next(new CustomUnauthorizedError("Invalid or expired token"));
       } else {
         req.user = authData.userId;
+        req.isGuest = authData.isGuest;
         next();
       }
     });
+  }
+};
+
+const guestValidator = async (req, res, next) => {
+  try {
+    if (req.user && req.isGuest) {
+      const guestUser = await prisma.user.findUnique({
+        where: { id: parseInt(req.user) },
+      });
+
+      if (!guestUser) {
+        throw new CustomUnauthorizedError(
+          "Guest account no longer exists, please sign in again"
+        );
+      }
+
+      if (
+        guestUser.guestExpiry &&
+        new Date() * guestUser.guestExpiry < new Date()
+      ) {
+        throw new CustomUnauthorizedError(
+          "Guest session expired. Please sign in again."
+        );
+      }
+      next();
+    }
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -140,4 +170,5 @@ module.exports = {
   postValidation,
   commentValidation,
   validateJWT,
+  guestValidator,
 };

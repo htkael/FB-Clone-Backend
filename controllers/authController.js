@@ -113,7 +113,7 @@ exports.login = [
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "5h",
+      expiresIn: "48h",
     });
 
     const { password: _, ...userWithoutPassword } = user;
@@ -174,4 +174,55 @@ exports.logout = asyncHandler(async (req, res) => {
     console.error(err);
     throw new CustomServerError("Server error during logout");
   }
+});
+
+exports.guestLogin = asyncHandler(async (req, res) => {
+  const guestUsername = `guest_${Math.random().toString(36).substring(2, 10)}`;
+  const temporaryPassword = Math.random().toString(36).substring(2, 15);
+  const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+  const guestUser = await prisma.user.create({
+    data: {
+      username: guestUsername,
+      email: `${guestUsername}@guest.temporary`,
+      password: hashedPassword,
+      firstName: "Guest",
+      lastName: "User",
+      isGuest: true,
+      guestExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      isOnline: true,
+      profilePicUrl: generateGravatarUrl(`${guestUsername}@guest.temporary.`),
+    },
+  });
+
+  const token = jwt.sign(
+    {
+      userId: guestUser.id,
+      isGuest: true,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "24h",
+    }
+  );
+
+  const { password: _, ...guestUserWithoutPassword } = guestUser;
+
+  if (req.io) {
+    const socketService = new SocketService(req.io, req.activeUsers);
+    socketService.broadcastToAll("user:status", {
+      userId: guestUser.id,
+      status: "online",
+      isGuest: true,
+    });
+  }
+
+  res.json({
+    success: true,
+    message: "Guest login successful",
+    user: guestUserWithoutPassword,
+    token,
+    isGuest: true,
+    expiresAt: guestUser.guestExpiry,
+  });
 });
