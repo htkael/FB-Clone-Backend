@@ -9,7 +9,7 @@ exports.scheduleGuestCleanup = () => {
       const expiredGuests = await prisma.user.findMany({
         where: {
           isGuest: true,
-          guesExpiry: {
+          guestExpiry: {
             lt: new Date(),
           },
         },
