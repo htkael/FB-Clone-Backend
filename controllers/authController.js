@@ -75,10 +75,23 @@ exports.signup = [
 
     const { password: _, ...userWithoutPassword } = user;
 
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "48h",
+    });
+
+    if (req.io) {
+      const socketService = new SocketService(req.io, req.activeUsers);
+      socketService.broadcastToAll("user:status", {
+        userId: user.id,
+        status: "online",
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: "User created successfully!",
       user: userWithoutPassword,
+      token,
     });
   }),
 ];
