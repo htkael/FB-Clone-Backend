@@ -70,6 +70,7 @@ exports.signup = [
         username,
         password: hashedPassword,
         profilePicUrl,
+        isOnline: true,
       },
     });
 
