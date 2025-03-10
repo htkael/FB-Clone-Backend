@@ -50,10 +50,6 @@ exports.getPosts = asyncHandler(async (req, res) => {
       },
     });
 
-    if (!posts) {
-      throw new CustomNotFoundError("Posts not found");
-    }
-
     const totalPages = Math.ceil(total / limit);
     const hasNext = page < totalPages;
     const hasPrev = page > 1;

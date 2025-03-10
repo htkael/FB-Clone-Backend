@@ -130,6 +130,7 @@ const validateJWT = async (req, res, next) => {
       } else {
         req.user = authData.userId;
         req.isGuest = authData.isGuest;
+        console.log(`User validated with id`, req.user);
         next();
       }
     });
@@ -151,7 +152,7 @@ const guestValidator = async (req, res, next) => {
 
       if (
         guestUser.guestExpiry &&
-        new Date() * guestUser.guestExpiry < new Date()
+        new Date(guestUser.guestExpiry) < new Date()
       ) {
         throw new CustomUnauthorizedError(
           "Guest session expired. Please sign in again."
