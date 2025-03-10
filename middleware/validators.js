@@ -160,6 +160,7 @@ const guestValidator = async (req, res, next) => {
       }
       next();
     }
+    next();
   } catch (err) {
     next(err);
   }
