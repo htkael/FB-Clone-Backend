@@ -159,9 +159,10 @@ exports.login = [
 
 exports.logout = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
+  console.log(req.user);
+  console.log(userId);
 
   try {
-    // Update user's online status
     await prisma.user.update({
       where: { id: userId },
       data: {
@@ -170,7 +171,6 @@ exports.logout = asyncHandler(async (req, res) => {
       },
     });
 
-    // Broadcast user offline status
     if (req.io) {
       const socketService = new SocketService(req.io, req.activeUsers);
       socketService.broadcastToAll("user:status", {

@@ -10,6 +10,7 @@ const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
 
 exports.getPosts = asyncHandler(async (req, res) => {
+  console.log(req.user);
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
