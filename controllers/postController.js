@@ -34,6 +34,7 @@ exports.getPosts = asyncHandler(async (req, res) => {
               select: {
                 id: true,
                 username: true,
+                profilePicUrl: true,
               },
             },
           },
@@ -135,6 +136,7 @@ exports.getSinglePost = asyncHandler(async (req, res) => {
               select: {
                 id: true,
                 username: true,
+                profilePicUrl: true,
               },
             },
           },
@@ -404,6 +406,7 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
               select: {
                 id: true,
                 username: true,
+                profilePicUrl: true,
               },
             },
           },
@@ -445,6 +448,7 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
               select: {
                 id: true,
                 username: true,
+                profilePicUrl: true,
               },
             },
           },
