@@ -378,7 +378,9 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
       },
     });
     const friendIds = friendships.map((friendship) => {
-      friendship.userId === userId ? friendship.friendId : friendship.userId;
+      return friendship.userId === userId
+        ? friendship.friendId
+        : friendship.userId;
     });
 
     const friendPosts = await prisma.post.findMany({
