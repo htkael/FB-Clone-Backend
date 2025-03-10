@@ -7,6 +7,7 @@ const { validationResult } = require("express-validator");
 const {
   CustomValidationError,
   CustomNotFoundError,
+  CustomServerError,
 } = require("../errors/CustomErrors");
 const prisma = require("../prisma/client");
 const bcrypt = require("bcryptjs");
@@ -159,8 +160,6 @@ exports.login = [
 
 exports.logout = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
-  console.log(req.user);
-  console.log(userId);
 
   try {
     await prisma.user.update({

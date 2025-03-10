@@ -158,7 +158,6 @@ const guestValidator = async (req, res, next) => {
           "Guest session expired. Please sign in again."
         );
       }
-      next();
     }
     next();
   } catch (err) {
