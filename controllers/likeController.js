@@ -169,6 +169,20 @@ exports.getLikesFromUser = asyncHandler(async (req, res) => {
               select: {
                 id: true,
                 username: true,
+                profilePicUrl: true,
+              },
+            },
+          },
+          include: {
+            comments: {
+              include: {
+                author: {
+                  select: {
+                    id: true,
+                    username: true,
+                    profilePicUrl: true,
+                  },
+                },
               },
             },
           },
