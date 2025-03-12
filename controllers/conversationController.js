@@ -568,27 +568,16 @@ exports.markConversationAsRead = asyncHandler(async (req, res) => {
       },
     });
 
-    const unreadMessages = await prisma.message.findMany({
+    await prisma.message.updateMany({
       where: {
         conversationId,
-        NOT: {
-          readBy: {
-            some: { userId },
-          },
-        },
+        isRead: false,
+        senderId: { not: userId }, // Only mark messages sent by others as read
+      },
+      data: {
+        isRead: true,
       },
     });
-
-    await Promise.all(
-      unreadMessages.map((message) =>
-        prisma.messageReadStatus.create({
-          data: {
-            messageId: message.id,
-            userId,
-          },
-        })
-      )
-    );
 
     res.json({
       success: true,
