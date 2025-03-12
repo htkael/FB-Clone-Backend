@@ -165,6 +165,7 @@ exports.getLikesFromUser = asyncHandler(async (req, res) => {
             id: true,
             content: true,
             imageUrl: true,
+            createdAt: true,
             author: {
               select: {
                 id: true,
