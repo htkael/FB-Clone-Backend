@@ -183,6 +183,13 @@ exports.getLikesFromUser = asyncHandler(async (req, res) => {
                 },
               },
             },
+            likes: true,
+            _count: {
+              select: {
+                likes: true,
+                comments: true,
+              },
+            },
           },
         },
       },
