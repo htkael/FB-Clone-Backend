@@ -105,6 +105,7 @@ exports.getConversations = asyncHandler(async (req, res) => {
 exports.createConversation = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
   const { participants, title, isGroup } = req.body;
+  console.log("participants", participants);
   try {
     if (
       !participants ||

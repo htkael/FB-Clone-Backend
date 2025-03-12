@@ -290,6 +290,7 @@ exports.searchUser = asyncHandler(async (req, res) => {
   const take = parseInt(limit);
 
   try {
+    console.log("username", username);
     const users = await prisma.user.findMany({
       where: searchCriteria,
       take,
