@@ -172,8 +172,6 @@ exports.getLikesFromUser = asyncHandler(async (req, res) => {
                 profilePicUrl: true,
               },
             },
-          },
-          include: {
             comments: {
               include: {
                 author: {
