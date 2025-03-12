@@ -276,6 +276,7 @@ exports.deletePost = asyncHandler(async (req, res) => {
 
 exports.postsFromUser = asyncHandler(async (req, res) => {
   const userId = parseInt(req.params.userId);
+  console.log(userId);
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -302,7 +303,7 @@ exports.postsFromUser = asyncHandler(async (req, res) => {
               select: {
                 id: true,
                 username: true,
-                profilePicUrl,
+                profilePicUrl: true,
               },
             },
           },
