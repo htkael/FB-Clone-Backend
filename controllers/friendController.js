@@ -144,10 +144,22 @@ exports.getPending = asyncHandler(async (req, res) => {
   try {
     const pending = await prisma.friend.findMany({
       where: {
-        userId: userId,
+        OR: [
+          // This should be an array, not an object
+          { userId: userId },
+          { friendId: userId },
+        ],
         status: "PENDING",
       },
       include: {
+        // You need to include both user and friend relations
+        user: {
+          select: {
+            id: true,
+            username: true,
+            profilePicUrl: true,
+          },
+        },
         friend: {
           select: {
             id: true,
