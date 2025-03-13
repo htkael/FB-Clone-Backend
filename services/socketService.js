@@ -78,20 +78,30 @@ class SocketService {
   }
 
   isUserActive(userId) {
-    // Ensure userId is treated as a string for consistency
+    // Make sure userId is a string for consistent comparison
     const userIdStr = userId.toString();
-    const isActive = this.activeUsers.has(userIdStr);
 
-    console.log(`Checking if user ${userIdStr} is active: ${isActive}`);
+    // Debug logs
+    console.log(
+      `Checking if user ${userIdStr} is active with type ${typeof userIdStr}`
+    );
     console.log(
       `Active users: ${Array.from(this.activeUsers.keys()).join(", ")}`
     );
 
-    return isActive;
-  }
+    // Log each active user with its type for comparison
+    for (const activeId of this.activeUsers.keys()) {
+      console.log(`Active user: ${activeId} with type ${typeof activeId}`);
+    }
 
-  getActiveUsersCount() {
-    return this.activeUsers.size;
+    // Try both direct and string comparison
+    const directCheck = this.activeUsers.has(userId);
+    const stringCheck = this.activeUsers.has(userIdStr);
+
+    console.log(`Direct check: ${directCheck}, String check: ${stringCheck}`);
+
+    // Return the more likely correct result
+    return stringCheck;
   }
 
   notifyUserStoppedTyping(conversationId, userId) {
