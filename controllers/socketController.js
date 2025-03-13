@@ -67,5 +67,56 @@ exports.setupSocketEvents = (io) => {
         console.error("Message read notification error:", error);
       }
     });
+
+    socket.on("notification:read", async (data) => {
+      try {
+        const { notificationIds } = data;
+        await prisma.notification.updateMany({
+          where: {
+            id: {
+              in: notificationIds,
+            },
+          },
+          data: {
+            isRead: true,
+          },
+        });
+        const socketService = new SocketService(io, socket.activeUsers);
+        socketService.notifyNotificationsRead(userId, notificationIds);
+      } catch (err) {
+        console.error("Notification read error:", err);
+      }
+    });
+
+    socket.on("notification:read:all", async (data) => {
+      try {
+        await prisma.notification.updateMany({
+          where: {
+            userId,
+          },
+          data: {
+            isRead: true,
+          },
+        });
+        const socketService = new SocketService(io, socket.activeUsers);
+        socketService.notifyNotificationsReadAll(userId);
+      } catch (err) {
+        console.error("Notification read error:", err);
+      }
+    });
+
+    socket.on("notification:clear", async (data) => {
+      try {
+        await prisma.notification.deleteMany({
+          where: {
+            userId,
+          },
+        });
+        const socketService = new SocketService(io, socket.activeUsers);
+        socketService.notifyNotificationsCleared(userId);
+      } catch (err) {
+        console.error("Notification read error:", err);
+      }
+    });
   });
 };

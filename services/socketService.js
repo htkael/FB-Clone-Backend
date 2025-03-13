@@ -58,6 +58,25 @@ class SocketService {
     });
   }
 
+  notifyNotificationsRead(userId, notificationIds) {
+    this.io.to(`user:${userId}`).emit("notification:read", {
+      userId,
+      notificationIds,
+    });
+  }
+
+  notifyNotificationsReadAll(userId, notificationIds) {
+    this.io.to(`user:${userId}`).emit("notification:read:all", {
+      userId,
+    });
+  }
+
+  notifyNotificationsCleared(userId) {
+    this.io.to(`user:${userId}`).emit("notification:clear", {
+      userId,
+    });
+  }
+
   isUserActive(userId) {
     return this.activeUsers.has(userId.toString());
   }
