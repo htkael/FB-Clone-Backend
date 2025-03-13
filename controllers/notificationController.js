@@ -130,31 +130,15 @@ exports.markAllAsRead = asyncHandler(async (req, res) => {
 
 exports.deleteNotification = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
-  const notificationId = parseInt(req.params.notificationId);
 
   try {
-    const notification = await prisma.notification.findUnique({
-      where: { id: notificationId },
-    });
-    if (!notification) {
-      throw new CustomNotFoundError(
-        `Notification with id (${notificationId}) not found`
-      );
-    }
-
-    if (notification.userId !== userId) {
-      throw new CustomBadRequestError(
-        "You can only delete your own notifications"
-      );
-    }
-
-    await prisma.notification.delete({
-      where: { id: notificationId },
+    await prisma.notification.deleteMany({
+      where: { userId },
     });
 
     res.json({
       success: true,
-      message: "Notification deleted successfully",
+      message: "Notifications deleted successfully",
     });
   } catch (err) {
     console.error(err);
