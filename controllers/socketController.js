@@ -118,5 +118,18 @@ exports.setupSocketEvents = (io) => {
         console.error("Notification read error:", err);
       }
     });
+
+    socket.on("test:notification", () => {
+      console.log(`Testing notification for user: ${socket.userId}`);
+      io.to(`user:${socket.userId}`).emit("notification:new", {
+        id: Date.now(),
+        type: "test",
+        content: "This is a test notification",
+        userId: socket.userId,
+        createdAt: new Date(),
+        isRead: false,
+        // Add any other fields needed for your notification
+      });
+    });
   });
 };

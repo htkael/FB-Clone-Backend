@@ -22,7 +22,17 @@ class NotificationService {
       },
     });
 
+    console.log(
+      `Attempt to send notification to user ${
+        notification.userId
+      }. User active: ${this.socketService.isUserActive(notification.userId)}`
+    );
+
     if (this.socketService.isUserActive(notification.userId)) {
+      console.log(
+        `Emitting notification:new to user ${notification.userId}`,
+        notification
+      );
       this.socketService.emitToUser(
         notification.userId,
         "notification:new",
