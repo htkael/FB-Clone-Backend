@@ -277,7 +277,7 @@ exports.deleteUser = asyncHandler(async (req, res) => {
 });
 
 exports.searchUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, username, limit = 10, page = 1 } = req.query;
+  const { firstName, lastName, username, limit = 30, page = 1 } = req.query;
   const searchCriteria = {};
   if (firstName)
     searchCriteria.firstName = { contains: firstName, mode: "insensitive" };
@@ -288,6 +288,7 @@ exports.searchUser = asyncHandler(async (req, res) => {
 
   const skip = parseInt(page - 1) * parseInt(limit);
   const take = parseInt(limit);
+  const currentUserId = parseInt(req.user);
 
   try {
     console.log("username", username);
@@ -306,21 +307,58 @@ exports.searchUser = asyncHandler(async (req, res) => {
       },
     });
 
-    const totalCount = await prisma.user.count({
+    const total = await prisma.user.count({
       where: searchCriteria,
     });
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+    const hasPrev = page > 1;
+
+    const usersWithRelationship = await Promise.all(
+      users.map(async (user) => {
+        let isFriend = false;
+        let friendshipStatus = null;
+
+        if (currentUserId) {
+          const friendship = await prisma.friend.findFirst({
+            where: {
+              OR: [
+                { userId: currentUserId, friendId: user.id },
+                { userId: user.id, friendId: currentUserId },
+              ],
+            },
+          });
+
+          if (friendship) {
+            friendshipStatus = friendship.status;
+            isFriend = friendship.status === "ACCEPTED";
+          }
+        }
+
+        return {
+          ...user,
+          relationship: {
+            isFriend,
+            friendshipStatus,
+          },
+        };
+      })
+    );
 
     res.json({
       success: true,
-      users,
-      pagination: {
-        total: totalCount,
-        pages: Math.ceil(totalCount / take),
+      data: usersWithRelationship,
+      meta: {
         page: parseInt(page),
         limit: parseInt(limit),
+        total,
+        totalPages,
+        hasNext,
+        hasPrev,
       },
     });
   } catch (err) {
+    console.error(err);
     throw new CustomServerError("Error searching for users");
   }
 });
