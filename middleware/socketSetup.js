@@ -42,6 +42,11 @@ function setupSocketIO(server) {
     const userId = socket.userId;
     socket.activeUsers = activeUsers;
     console.log(`User connected ${userId}`);
+    console.log(
+      `Active users after connection: ${Array.from(activeUsers.keys()).join(
+        ", "
+      )}`
+    );
 
     prisma.user
       .update({

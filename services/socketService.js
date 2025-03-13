@@ -78,12 +78,15 @@ class SocketService {
   }
 
   isUserActive(userId) {
+    // Ensure userId is treated as a string for consistency
     const userIdStr = userId.toString();
     const isActive = this.activeUsers.has(userIdStr);
+
     console.log(`Checking if user ${userIdStr} is active: ${isActive}`);
     console.log(
       `Active users: ${Array.from(this.activeUsers.keys()).join(", ")}`
     );
+
     return isActive;
   }
 
@@ -99,21 +102,8 @@ class SocketService {
     });
   }
 
-  mitToUser(userId, event, data) {
-    userId = userId.toString();
-    const room = `user:${userId}`;
-    console.log(`Emitting ${event} to room ${room}`);
-
-    // Check if room exists and has connections
-    const socketsInRoom = this.io.sockets.adapter.rooms.get(room);
-    if (socketsInRoom) {
-      console.log(`Room ${room} has ${socketsInRoom.size} sockets`);
-    } else {
-      console.log(`Room ${room} does not exist or is empty`);
-    }
-
-    this.io.to(room).emit(event, data);
-    console.log(`Emission to ${room} complete`);
+  emitToUser(userId, event, data) {
+    this.io.to(`user:${userId}`).emit(event, data);
   }
 
   emitToConversation(conversationId, event, data) {
