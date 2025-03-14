@@ -162,7 +162,7 @@ exports.logout = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
 
   try {
-    const userExists = await prisma.findUnique({
+    const userExists = await prisma.user.findUnique({
       where: {
         id: userId,
       },
