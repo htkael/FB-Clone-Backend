@@ -65,6 +65,10 @@ function setupSocketIO(server) {
 
     socket.broadcast.emit("user:online", { userId });
 
+    socket.emit("users:online:initial", {
+      userIds: Array.from(activeUsers.keys()),
+    });
+
     socket.join(`user:${userId}`);
 
     socket.on("conversation:join", (conversationId) => {
