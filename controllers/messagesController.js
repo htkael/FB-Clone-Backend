@@ -238,25 +238,28 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
   const conversationId = parseInt(req.params.conversationId);
   const messageId = parseInt(req.params.messageId);
   const senderId = parseInt(req.user);
+
   try {
+    // Log input parameters
+    console.log(`Attempting to delete message:`, {
+      conversationId,
+      messageId,
+      senderId,
+    });
+
     const conversation = await prisma.conversation.findUnique({
-      where: {
-        id: conversationId,
-      },
+      where: { id: conversationId },
       include: {
         participants: {
           include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-              },
-            },
+            user: { select: { id: true, username: true } },
           },
         },
       },
     });
+
     if (!conversation) {
+      console.log(`Conversation not found: ${conversationId}`);
       throw new CustomNotFoundError(
         `Conversation with id (${conversationId}) not found`
       );
@@ -270,32 +273,42 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
         },
       },
     });
+
     if (!currentParticipant) {
+      console.log(`User not a participant: ${senderId}`);
       throw new CustomBadRequestError(
         "You are not a participant of this conversation"
       );
     }
 
     const message = await prisma.message.findUnique({
-      where: {
-        id: messageId,
-      },
+      where: { id: messageId },
     });
+
     if (!message) {
+      console.log(`Message not found: ${messageId}`);
       throw new CustomNotFoundError(`Message with id (${messageId}) not found`);
     }
 
     if (senderId !== message.senderId) {
+      console.log(
+        `Unauthorized delete attempt: sender ${senderId}, message sender ${message.senderId}`
+      );
       throw new CustomUnauthorizedError(
         "You can only delete messages that you sent"
       );
     }
 
-    await prisma.message.delete({
-      where: {
-        id: messageId,
+    // Add explicit soft delete or hard delete
+    const deletedMessage = await prisma.message.update({
+      where: { id: messageId },
+      data: {
+        content: null, // Optional: soft delete content
+        deletedAt: new Date(), // Add a deleted timestamp
       },
     });
+
+    console.log(`Message deleted:`, deletedMessage);
 
     const socketService = new SocketService(req.io, req.activeUsers);
     socketService.notifyMessageDeleted(message);
@@ -303,9 +316,11 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
     res.json({
       success: true,
       message: "Message deleted successfully",
+      deletedMessage,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Full delete error:", err);
+
     if (
       err instanceof CustomBadRequestError ||
       err instanceof CustomNotFoundError ||
@@ -314,6 +329,7 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
     ) {
       throw err;
     }
+
     throw new CustomServerError("Server error while deleting message");
   }
 });
