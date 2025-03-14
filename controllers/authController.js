@@ -162,21 +162,29 @@ exports.logout = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
 
   try {
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        isOnline: false,
-        lastSeen: new Date(),
+    const userExists = await prisma.findUnique({
+      where: {
+        id: userId,
       },
     });
 
-    if (req.io) {
-      const socketService = new SocketService(req.io, req.activeUsers);
-      socketService.broadcastToAll("user:status", {
-        userId,
-        status: "offline",
-        lastSeen: new Date(),
+    if (userExists) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          isOnline: false,
+          lastSeen: new Date(),
+        },
       });
+
+      if (req.io) {
+        const socketService = new SocketService(req.io, req.activeUsers);
+        socketService.broadcastToAll("user:status", {
+          userId,
+          status: "offline",
+          lastSeen: new Date(),
+        });
+      }
     }
 
     res.json({
