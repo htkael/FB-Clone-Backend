@@ -300,10 +300,9 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
     }
 
     // Add explicit soft delete or hard delete
-    const deletedMessage = await prisma.message.update({
+    const deletedMessage = await prisma.message.delete({
       where: { id: messageId },
       data: {
-        content: null, // Optional: soft delete content
         deletedAt: new Date(), // Add a deleted timestamp
       },
     });
