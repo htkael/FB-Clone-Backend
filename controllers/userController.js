@@ -277,34 +277,14 @@ exports.deleteUser = asyncHandler(async (req, res) => {
 });
 
 exports.searchUser = asyncHandler(async (req, res) => {
-  const {
-    searchTerm,
-    firstName,
-    lastName,
-    username,
-    limit = 30,
-    page = 1,
-  } = req.query;
+  const { firstName, lastName, username, limit = 30, page = 1 } = req.query;
   const searchCriteria = {};
-
-  if (searchTerm) {
-    searchCriteria = {
-      OR: [
-        { firstName: { contains: searchTerm, mode: "insensitive" } },
-        { lastName: { contains: searchTerm, mode: "insensitive" } },
-        { username: { contains: searchTerm, mode: "insensitive" } },
-      ],
-    };
-  }
-  // Otherwise, use individual field filters if provided
-  else {
-    if (firstName)
-      searchCriteria.firstName = { contains: firstName, mode: "insensitive" };
-    if (lastName)
-      searchCriteria.lastName = { contains: lastName, mode: "insensitive" };
-    if (username)
-      searchCriteria.username = { contains: username, mode: "insensitive" };
-  }
+  if (firstName)
+    searchCriteria.firstName = { contains: firstName, mode: "insensitive" };
+  if (lastName)
+    searchCriteria.lastName = { contains: lastName, mode: "insensitive" };
+  if (username)
+    searchCriteria.username = { contains: username, mode: "insensitive" };
 
   const skip = parseInt(page - 1) * parseInt(limit);
   const take = parseInt(limit);
