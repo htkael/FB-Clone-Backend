@@ -6,6 +6,8 @@ const errorHandler = (err, req, res, next) => {
     name: err.name || "Error",
   };
 
+  console.error("Global Error Handler:", err);
+
   if (err.errors) {
     errorResponse.errors = err.errors;
   }
