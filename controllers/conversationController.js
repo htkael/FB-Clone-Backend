@@ -568,16 +568,13 @@ exports.markConversationAsRead = asyncHandler(async (req, res) => {
       },
     });
 
-    await prisma.message.updateMany({
-      where: {
-        conversationId,
-        isRead: false,
-        senderId: { not: userId }, // Only mark messages sent by others as read
-      },
-      data: {
-        isRead: true,
-      },
-    });
+    await prisma.$executeRaw`
+  UPDATE "Message"
+  SET "isRead" = true
+  WHERE "conversationId" = ${conversationId}
+    AND "isRead" = false
+    AND "senderId" != ${userId}
+`;
 
     res.json({
       success: true,
