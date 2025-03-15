@@ -393,7 +393,6 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    // Get all friend posts
     const friendPosts = await prisma.post.findMany({
       where: {
         authorId: { in: friendIds },
@@ -428,7 +427,6 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
       },
     });
 
-    // Get trending posts
     const trendingPosts = await prisma.post.findMany({
       where: {
         authorId: { notIn: [...friendIds, userId] },
@@ -467,7 +465,6 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
       },
     });
 
-    // Get user posts
     const userPosts = await prisma.post.findMany({
       where: {
         authorId: userId,
@@ -530,10 +527,10 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     if (err instanceof CustomUnauthorizedError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError("Server error when retrieving user feed");
   }
