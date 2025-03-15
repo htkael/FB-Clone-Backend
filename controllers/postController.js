@@ -368,8 +368,8 @@ exports.postsFromUser = asyncHandler(async (req, res) => {
 
 exports.getUserFeed = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 10;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
   try {
@@ -387,12 +387,17 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
         : friendship.userId;
     });
 
+    // Option 1: Get all posts without pagination, then paginate the final result
+    // This is simple but could be inefficient if you have many posts
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    // Get all friend posts
     const friendPosts = await prisma.post.findMany({
       where: {
         authorId: { in: friendIds },
       },
-      take: Math.floor(limit * 0.6),
-      skip,
       orderBy: { createdAt: "desc" },
       include: {
         author: {
@@ -423,15 +428,12 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
       },
     });
 
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
+    // Get trending posts
     const trendingPosts = await prisma.post.findMany({
       where: {
         authorId: { notIn: [...friendIds, userId] },
         createdAt: { gte: oneWeekAgo },
       },
-      take: Math.ceil(limit * 0.3),
       orderBy: [
         { likes: { _count: "desc" } },
         { comments: { _count: "desc" } },
@@ -465,12 +467,11 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
       },
     });
 
+    // Get user posts
     const userPosts = await prisma.post.findMany({
       where: {
         authorId: userId,
       },
-      take: Math.floor(limit * 0.1),
-      skip,
       orderBy: { createdAt: "desc" },
       include: {
         author: {
@@ -501,32 +502,22 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
       },
     });
 
+    // Combine and sort all posts
     const allPosts = [...friendPosts, ...trendingPosts, ...userPosts].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
 
-    const totalFriendPosts = await prisma.post.count({
-      where: { authorId: { in: friendIds } },
-    });
+    // Apply pagination to combined results
+    const paginatedPosts = allPosts.slice(skip, skip + limit);
 
-    const totalTrendingPosts = await prisma.post.count({
-      where: {
-        authorId: { notIn: [...friendIds, userId] },
-        createdAt: { gte: oneWeekAgo },
-      },
-    });
-
-    const totalUserPosts = await prisma.post.count({
-      where: { authorId: userId },
-    });
-
-    const total = totalFriendPosts + totalTrendingPosts + totalUserPosts;
+    // Get total counts for pagination info
+    const total = allPosts.length;
     const totalPages = Math.ceil(total / limit);
 
     res.json({
       success: true,
       message: "Feed retrieved successfully",
-      data: allPosts,
+      data: paginatedPosts,
       meta: {
         page,
         limit,
