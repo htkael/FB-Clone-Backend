@@ -92,9 +92,7 @@ exports.createPost = [
         formData
       );
     }
-    console.log("req", req);
-    console.log("headers", req.header);
-    console.log("req.body", req.body);
+
     const { content } = req.body;
 
     let imageUrl = null;
