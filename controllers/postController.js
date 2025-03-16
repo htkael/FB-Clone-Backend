@@ -8,6 +8,7 @@ const {
 const { postValidation } = require("../middleware/validators");
 const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
+const cloudinary = require("../services/cloudinary");
 
 exports.getPosts = asyncHandler(async (req, res) => {
   console.log(req.user);
@@ -72,7 +73,7 @@ exports.getPosts = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError("Error retrieving posts");
   }
@@ -91,12 +92,32 @@ exports.createPost = [
         formData
       );
     }
-    const { content, imageUrl } = req.body;
+    console.log("req.body", req.body);
+    const { content } = req.body;
+
+    let imageUrl = null;
+
+    if (req.files && req.files.file) {
+      console.log("Found files", req.files.file);
+      const file = req.files.file;
+
+      const upload = await cloudinary.uploader.upload(file.tempFilePath, {
+        resource_type: "auto",
+      });
+
+      console.log("Cloudinary upload result:", {
+        public_id: upload.public_id,
+        url: upload.secure_url,
+      });
+
+      imageUrl = upload.secure_url;
+    }
+
     const id = parseInt(req.user);
     const post = await prisma.post.create({
       data: {
         content,
-        imageUrl,
+        imageUrl: upload.secure_url,
         authorId: id,
       },
       include: {
@@ -164,7 +185,7 @@ exports.getSinglePost = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError("Server error when retrieving post");
   }
@@ -183,19 +204,58 @@ exports.updatePost = [
         formData
       );
     }
+
     const id = parseInt(req.params.postId);
     const userId = parseInt(req.user);
+
+    // Find the post to ensure it exists and the user owns it
     const post = await prisma.post.findUnique({
       where: { id },
     });
+
     if (!post) {
       throw new CustomNotFoundError(`Post with id (${id}) not found`);
     }
+
     if (userId !== post.authorId) {
       throw new CustomUnauthorizedError("You can only update your own post");
     }
-    const { content, imageUrl } = req.body;
+
+    const { content, removeImage } = req.body;
+    let imageUrl = post.imageUrl; // Default to keeping the existing image
+
     try {
+      // Check if a new image is being uploaded
+      if (req.files && req.files.image) {
+        console.log("Uploading new image for post update");
+        const file = req.files.image;
+
+        // Upload new image to Cloudinary
+        const upload = await cloudinary.uploader.upload(file.tempFilePath, {
+          resource_type: "auto",
+        });
+
+        imageUrl = upload.secure_url;
+
+        // If there was a previous image, we could delete it from Cloudinary here
+        if (post.imageUrl) {
+          const publicId = post.imageUrl.split("/").pop().split(".")[0];
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+      // Check if the image should be removed
+      else if (removeImage === "true") {
+        console.log("Removing image from post");
+        imageUrl = null;
+
+        // Optionally delete the image from Cloudinary
+        if (post.imageUrl) {
+          const publicId = post.imageUrl.split("/").pop().split(".")[0];
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
+      // Update the post in the database
       const updatedPost = await prisma.post.update({
         where: { id },
         data: {
@@ -230,6 +290,7 @@ exports.updatePost = [
           },
         },
       });
+
       res.json({
         success: true,
         message: "Post updated successfully",
@@ -238,13 +299,13 @@ exports.updatePost = [
     } catch (err) {
       console.error(err);
       if (err instanceof CustomNotFoundError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       if (err instanceof CustomUnauthorizedError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       if (err instanceof CustomValidationError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       throw new CustomServerError("Error when updating post");
     }
@@ -354,10 +415,10 @@ exports.postsFromUser = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     if (err instanceof CustomUnauthorizedError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError(
       "Server error when retrieving posts from user with id:",
@@ -386,9 +447,6 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
         ? friendship.friendId
         : friendship.userId;
     });
-
-    // Option 1: Get all posts without pagination, then paginate the final result
-    // This is simple but could be inefficient if you have many posts
 
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -499,15 +557,12 @@ exports.getUserFeed = asyncHandler(async (req, res) => {
       },
     });
 
-    // Combine and sort all posts
     const allPosts = [...friendPosts, ...trendingPosts, ...userPosts].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
 
-    // Apply pagination to combined results
     const paginatedPosts = allPosts.slice(skip, skip + limit);
 
-    // Get total counts for pagination info
     const total = allPosts.length;
     const totalPages = Math.ceil(total / limit);
 

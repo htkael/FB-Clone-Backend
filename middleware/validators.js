@@ -80,33 +80,6 @@ const loginValidation = [
 
 const postValidation = [
   body("content").trim().exists().withMessage("Post content is required"),
-  body("imageUrl")
-    .optional()
-    .isURL({
-      protocols: ["http", "https"],
-      require_protocol: true,
-    })
-    .withMessage("Image URL must be a valid HTTP/HTTPS URL")
-    .custom((value) => {
-      if (!value) return true;
-      const validExtensions = [
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".gif",
-        ".webp",
-        ".svg",
-      ];
-      const hasValidExtension = validExtensions.some((ext) =>
-        value.toLowerCase().endsWith(ext)
-      );
-      if (!hasValidExtension) {
-        throw new CustomValidationError(
-          "Image URL must have a valid extension (.jpg, .jpeg, .png, .svg, .webp, .gif)"
-        );
-      }
-      return true;
-    }),
 ];
 
 commentValidation = [
