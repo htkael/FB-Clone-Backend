@@ -141,7 +141,7 @@ class NotificationService {
   }
 
   async notifyPostLike(postId, likerId, authorId) {
-    if (likerId === authorId) return; // Don't notify yourself
+    if (likerId === authorId) return;
 
     const liker = await prisma.user.findUnique({
       where: { id: likerId },
@@ -158,7 +158,7 @@ class NotificationService {
   }
 
   async notifyPostComment(commentId, postId, commenterId, authorId) {
-    if (commenterId === authorId) return; // Don't notify yourself
+    if (commenterId === authorId) return;
 
     const commenter = await prisma.user.findUnique({
       where: { id: commenterId },

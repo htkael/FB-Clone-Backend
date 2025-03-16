@@ -384,7 +384,6 @@ exports.getSpecificConversation = asyncHandler(async (req, res) => {
 
     const latestMessage = conversation.messages[0];
     if (latestMessage) {
-      // Emit socket event for read receipt
       const socketService = new SocketService(req.io, req.activeUsers);
       socketService.notifyMessageRead(conversationId, userId, latestMessage.id);
     }
@@ -555,7 +554,6 @@ exports.markConversationAsRead = asyncHandler(async (req, res) => {
   const conversationId = parseInt(req.params.conversationId);
 
   try {
-    // Update the lastReadAt timestamp
     await prisma.conversationParticipant.update({
       where: {
         userId_conversationId: {

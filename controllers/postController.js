@@ -121,7 +121,7 @@ exports.createPost = [
     const post = await prisma.post.create({
       data: {
         content,
-        imageUrl: upload.secure_url,
+        imageUrl,
         authorId: id,
       },
       include: {
@@ -212,7 +212,6 @@ exports.updatePost = [
     const id = parseInt(req.params.postId);
     const userId = parseInt(req.user);
 
-    // Find the post to ensure it exists and the user owns it
     const post = await prisma.post.findUnique({
       where: { id },
     });
@@ -226,40 +225,57 @@ exports.updatePost = [
     }
 
     const { content, removeImage } = req.body;
-    let imageUrl = post.imageUrl; // Default to keeping the existing image
+    let imageUrl = post.imageUrl;
 
     try {
-      // Check if a new image is being uploaded
       if (req.files && req.files.image) {
         console.log("Uploading new image for post update");
-        const file = req.files.image;
+        const file = req.files.file;
 
-        // Upload new image to Cloudinary
         const upload = await cloudinary.uploader.upload(file.tempFilePath, {
           resource_type: "auto",
         });
 
         imageUrl = upload.secure_url;
 
-        // If there was a previous image, we could delete it from Cloudinary here
         if (post.imageUrl) {
-          const publicId = post.imageUrl.split("/").pop().split(".")[0];
-          await cloudinary.uploader.destroy(publicId);
+          try {
+            const urlParts = post.imageUrl.split("/");
+
+            const filenameWithExt = urlParts[urlParts.length - 1];
+
+            const publicId = filenameWithExt.split(".")[0];
+
+            const folder = urlParts[urlParts.length - 2];
+            const fullPublicId = `${folder}/${publicId}`;
+
+            await cloudinary.uploader.destroy(fullPublicId);
+          } catch (deleteError) {
+            console.error("Error deleting previous image:", deleteError);
+          }
         }
-      }
-      // Check if the image should be removed
-      else if (removeImage === "true") {
+      } else if (removeImage === "true") {
         console.log("Removing image from post");
         imageUrl = null;
 
-        // Optionally delete the image from Cloudinary
         if (post.imageUrl) {
-          const publicId = post.imageUrl.split("/").pop().split(".")[0];
-          await cloudinary.uploader.destroy(publicId);
+          try {
+            const urlParts = post.imageUrl.split("/");
+
+            const filenameWithExt = urlParts[urlParts.length - 1];
+
+            const publicId = filenameWithExt.split(".")[0];
+
+            const folder = urlParts[urlParts.length - 2];
+            const fullPublicId = `${folder}/${publicId}`;
+
+            await cloudinary.uploader.destroy(fullPublicId);
+          } catch (deleteError) {
+            console.error("Error deleting previous image:", deleteError);
+          }
         }
       }
 
-      // Update the post in the database
       const updatedPost = await prisma.post.update({
         where: { id },
         data: {

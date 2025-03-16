@@ -68,13 +68,13 @@ exports.postComment = [
     } catch (err) {
       console.error(err);
       if (err instanceof CustomNotFoundError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       if (err instanceof CustomUnauthorizedError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       if (err instanceof CustomValidationError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       throw new CustomServerError("Server error when creating comment");
     }
@@ -134,10 +134,10 @@ exports.getCommentsFromPost = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     if (err instanceof CustomUnauthorizedError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError("Server error when retrieving comments");
   }
@@ -201,13 +201,13 @@ exports.updateComment = [
     } catch (err) {
       console.error(err);
       if (err instanceof CustomNotFoundError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       if (err instanceof CustomUnauthorizedError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       if (err instanceof CustomValidationError) {
-        throw err; // Let the error handler deal with it
+        throw err;
       }
       throw new CustomServerError(
         "Server error when attempting to update comment"
@@ -244,10 +244,10 @@ exports.deleteComment = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     if (err instanceof CustomUnauthorizedError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError("Server error when deleting comment");
   }
@@ -320,10 +320,10 @@ exports.getCommentsFromUser = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     if (err instanceof CustomUnauthorizedError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError(
       `Server error when retrieving comments from user with id: ${userId}`

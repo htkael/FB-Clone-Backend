@@ -107,7 +107,6 @@ exports.markAllAsRead = asyncHandler(async (req, res) => {
   const userId = parseInt(req.user);
 
   try {
-    // Update all unread notifications for this user
     await prisma.notification.updateMany({
       where: {
         userId,

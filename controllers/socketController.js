@@ -34,7 +34,6 @@ exports.setupSocketEvents = (io) => {
         }
 
         socket.typingTimeout = setTimeout(() => {
-          // Notify that typing stopped
           const socketService = new SocketService(io, socket.activeUsers);
           socketService.notifyUserStoppedTyping(conversationId, userId);
         }, 3000);
@@ -128,7 +127,6 @@ exports.setupSocketEvents = (io) => {
         userId: socket.userId,
         createdAt: new Date(),
         isRead: false,
-        // Add any other fields needed for your notification
       });
     });
   });

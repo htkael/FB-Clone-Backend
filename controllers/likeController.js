@@ -66,7 +66,7 @@ exports.likePost = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError("Server error when attempting to toggle like");
   }
@@ -124,7 +124,7 @@ exports.getLikesFromPost = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError(
       `Server error when retrieving likes from post with id (${postId})`
@@ -213,7 +213,7 @@ exports.getLikesFromUser = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err instanceof CustomNotFoundError) {
-      throw err; // Let the error handler deal with it
+      throw err;
     }
     throw new CustomServerError(
       `Server error when retrieving likes from user with id (${userId})`

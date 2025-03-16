@@ -240,7 +240,6 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
   const senderId = parseInt(req.user);
 
   try {
-    // Log input parameters
     console.log(`Attempting to delete message:`, {
       conversationId,
       messageId,
@@ -299,7 +298,6 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
       );
     }
 
-    // Add explicit soft delete or hard delete
     const deletedMessage = await prisma.message.delete({
       where: { id: messageId },
     });
