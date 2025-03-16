@@ -232,7 +232,7 @@ exports.updatePost = [
     try {
       if (req.files && req.files.image) {
         console.log("Uploading new image for post update");
-        const file = req.files.file;
+        const file = req.files.image;
 
         const upload = await cloudinary.uploader.upload(file.tempFilePath, {
           resource_type: "auto",
