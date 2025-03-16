@@ -8,7 +8,7 @@ const {
 const { postValidation } = require("../middleware/validators");
 const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
-const cloudinary = require("../services/cloudinary");
+const { cloudinary, handleUpload } = require("../services/cloudinary");
 
 exports.getPosts = asyncHandler(async (req, res) => {
   console.log(req.user);
@@ -92,6 +92,8 @@ exports.createPost = [
         formData
       );
     }
+    console.log("req", req);
+    console.log("headers", req.header);
     console.log("req.body", req.body);
     const { content } = req.body;
 

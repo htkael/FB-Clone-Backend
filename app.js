@@ -19,7 +19,6 @@ app.use(
   fileUpload({
     useTempFiles: true,
     tempFileDir: "/tmp/",
-    createParentPath: true,
   })
 );
 app.use(
