@@ -99,9 +99,9 @@ exports.createPost = [
 
     let imageUrl = null;
 
-    if (req.files && req.files.file) {
-      console.log("Found files", req.files.file);
-      const file = req.files.file;
+    if (req.files && req.files.image) {
+      console.log("Found files", req.files.image);
+      const file = req.files.image;
 
       const upload = await cloudinary.uploader.upload(file.tempFilePath, {
         resource_type: "auto",
