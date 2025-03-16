@@ -113,6 +113,10 @@ exports.createPost = [
       imageUrl = upload.secure_url;
     }
 
+    console.log("req.files:", req.files);
+    console.log("req.files type:", typeof req.files);
+    console.log("Content-Type header:", req.headers["content-type"]);
+
     const id = parseInt(req.user);
     const post = await prisma.post.create({
       data: {
