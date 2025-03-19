@@ -265,12 +265,26 @@ exports.createConversation = asyncHandler(async (req, res) => {
       },
       include: {
         participants: {
-          include: {
+          select: {
             user: {
               select: {
                 id: true,
                 username: true,
                 profilePicUrl: true,
+              },
+            },
+          },
+        },
+        messages: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          include: {
+            sender: {
+              select: {
+                id: true,
+                username: true,
               },
             },
           },
